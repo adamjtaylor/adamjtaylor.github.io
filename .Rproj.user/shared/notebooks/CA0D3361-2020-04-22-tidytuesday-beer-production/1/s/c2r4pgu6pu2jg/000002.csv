@@ -1,0 +1,2 @@
+"0","(plot_total | plot_op) + "
+"0","  plot_annotation(title = ""Total beer production has slowed, while production for consumption on the premises has soared, particuarly since 2013"", caption = ""Data source: Alcohol and Tobacco Tax and Trade Bureau (TTB) via @brewersstats\n\n@adamjtaylor #tidytuesday 2020-03-31"")"

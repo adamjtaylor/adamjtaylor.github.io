@@ -1,15 +1,34 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on A Hugo website</title>
+    <title>Posts on Adam J Taylor&#39;s personal website</title>
     <link>/post/</link>
-    <description>Recent content in Posts on A Hugo website</description>
+    <description>Recent content in Posts on Adam J Taylor&#39;s personal website</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 30 Dec 2016 21:49:57 -0700</lastBuildDate>
+    <lastBuildDate>Wed, 22 Apr 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Test post</title>
+      <link>/2020/04/22/test-post/</link>
+      <pubDate>Wed, 22 Apr 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/2020/04/22/test-post/</guid>
+      <description>THus is a test post A test post Lorem ipsum</description>
+    </item>
+    
+    <item>
+      <title>#tidytuesday: Beer production</title>
+      <link>/2020/03/31/tidytuesday-beer-production/</link>
+      <pubDate>Tue, 31 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/2020/03/31/tidytuesday-beer-production/</guid>
+      <description>This weeks tidytuesday was on beer production.
+Load the packages and importlibrary(tidyverse)## Warning: package &amp;#39;tidyverse&amp;#39; was built under R version 3.6.3## -- Attaching packages --------------------------------------------------------------------------------- tidyverse 1.3.0 --## v ggplot2 3.3.0 v purrr 0.3.3## v tibble 2.1.3 v dplyr 0.8.5## v tidyr 1.0.2 v stringr 1.4.0## v readr 1.3.1 v forcats 0.5.0## Warning: package &amp;#39;ggplot2&amp;#39; was built under R version 3.6.3## Warning: package &amp;#39;tibble&amp;#39; was built under R version 3.</description>
+    </item>
     
     <item>
       <title>A Plain Markdown Post</title>
@@ -39,15 +58,6 @@ summary(cars)## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 2
       
       <guid>/2015/01/01/lorem-ipsum/</guid>
       <description>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</description>
-    </item>
-    
-    <item>
-      <title>Multiple `geom_raster()` with different fill scales with `purrr` and `patchwork`</title>
-      <link>/1/01/01/multiple-geom_raster-with-different-fill-scales-with-purrr-and-patchwork/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/1/01/01/multiple-geom_raster-with-different-fill-scales-with-purrr-and-patchwork/</guid>
-      <description>It’s often useful to show small multiples of a geom_raster(). With other geom_*. While this can be done with facet_wrap() or facet_grid(), we canot set scales = &#34;free&#34; for the fill. If we need to have multiple fill scales we need another approach: Enter purrr to map from a nested tibbles of data to a list of plots that can be arranged with patcheork. Here is a worked example using images of handwritten digits from the MNIST dataset</description>
     </item>
     
   </channel>

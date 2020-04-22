@@ -1,0 +1,276 @@
+---
+title: '#tidytuesday: Beer production'
+author: Adam Taylor
+date: '2020-03-31'
+slug: tidytuesday-beer-production
+categories: []
+tags: ["tidytuesday"]
+---
+
+
+
+<p>This weeks tidytuesday was on beer production.</p>
+<div id="load-the-packages-and-import" class="section level1">
+<h1>Load the packages and import</h1>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Warning: package &#39;tidyverse&#39; was built under R version 3.6.3</code></pre>
+<pre><code>## -- Attaching packages --------------------------------------------------------------------------------- tidyverse 1.3.0 --</code></pre>
+<pre><code>## v ggplot2 3.3.0     v purrr   0.3.3
+## v tibble  2.1.3     v dplyr   0.8.5
+## v tidyr   1.0.2     v stringr 1.4.0
+## v readr   1.3.1     v forcats 0.5.0</code></pre>
+<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 3.6.3</code></pre>
+<pre><code>## Warning: package &#39;tibble&#39; was built under R version 3.6.2</code></pre>
+<pre><code>## Warning: package &#39;tidyr&#39; was built under R version 3.6.3</code></pre>
+<pre><code>## Warning: package &#39;readr&#39; was built under R version 3.6.3</code></pre>
+<pre><code>## Warning: package &#39;purrr&#39; was built under R version 3.6.3</code></pre>
+<pre><code>## Warning: package &#39;dplyr&#39; was built under R version 3.6.3</code></pre>
+<pre><code>## Warning: package &#39;stringr&#39; was built under R version 3.6.3</code></pre>
+<pre><code>## Warning: package &#39;forcats&#39; was built under R version 3.6.3</code></pre>
+<pre><code>## -- Conflicts ------------------------------------------------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(cowplot)</code></pre>
+<pre><code>## Warning: package &#39;cowplot&#39; was built under R version 3.6.3</code></pre>
+<pre><code>## 
+## ********************************************************</code></pre>
+<pre><code>## Note: As of version 1.0.0, cowplot does not change the</code></pre>
+<pre><code>##   default ggplot2 theme anymore. To recover the previous</code></pre>
+<pre><code>##   behavior, execute:
+##   theme_set(theme_cowplot())</code></pre>
+<pre><code>## ********************************************************</code></pre>
+<pre class="r"><code>library(ggrepel)</code></pre>
+<pre><code>## Warning: package &#39;ggrepel&#39; was built under R version 3.6.3</code></pre>
+<pre class="r"><code>#install.packages(&quot;gghighlight&quot;)
+library(gghighlight)</code></pre>
+<pre><code>## Warning: package &#39;gghighlight&#39; was built under R version 3.6.3</code></pre>
+<pre class="r"><code>library(patchwork)</code></pre>
+<pre><code>## Warning: package &#39;patchwork&#39; was built under R version 3.6.3</code></pre>
+<pre><code>## 
+## Attaching package: &#39;patchwork&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:cowplot&#39;:
+## 
+##     align_plots</code></pre>
+<pre class="r"><code>library(broom)</code></pre>
+<pre><code>## Warning: package &#39;broom&#39; was built under R version 3.6.3</code></pre>
+<pre class="r"><code>beer_states &lt;- readr::read_csv(&#39;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-31/beer_states.csv&#39;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   state = col_character(),
+##   year = col_double(),
+##   barrels = col_double(),
+##   type = col_character()
+## )</code></pre>
+</div>
+<div id="total-production" class="section level1">
+<h1>Total production</h1>
+<p>Perform a linear regression on on total priduction to find high and low growth rate states from the slope</p>
+<pre class="r"><code>beer_states_total &lt;- beer_states %&gt;% 
+  #filter(year &gt;= 2013) %&gt;%
+  mutate(barrels = replace_na(barrels, 0)) %&gt;%
+  group_by(state, year) %&gt;%
+  summarise(barrels= sum(barrels)) %&gt;%
+    filter(state != &quot;total&quot;)
+
+
+beer_growth &lt;- beer_states_total %&gt;%
+  filter(state != &quot;total&quot;) %&gt;%
+  na.omit() %&gt;%
+  group_by(state) %&gt;%
+  mutate(barrels_norm = barrels/max(barrels)) %&gt;%
+  group_nest(state) %&gt;%
+  mutate(model = map(data, ~lm(barrels_norm~year, data = .x)),
+         tidy = map(model, tidy)) %&gt;%
+  unnest(tidy) %&gt;%
+  filter(term == &quot;year&quot;) %&gt;%
+  select(state, estimate) %&gt;%
+  rename(slope = estimate)</code></pre>
+<pre><code>## Warning: ... is ignored in group_nest(&lt;grouped_df&gt;), please use group_by(...,
+## add = TRUE) %&gt;% group_nest()</code></pre>
+<pre class="r"><code>fast_growth_states &lt;- beer_growth %&gt;% top_n(5, slope) %&gt;% pull(state)
+
+slow_growth_states &lt;- beer_growth %&gt;% top_n(-5, slope) %&gt;% pull(state)
+
+high_prod_states &lt;- beer_states_total %&gt;% filter(year == 2018) %&gt;%
+  filter(state != &quot;total&quot;) %&gt;%
+  ungroup() %&gt;%
+  top_n(5, barrels) %&gt;% 
+  pull(state)</code></pre>
+<p>Plot the total production</p>
+<pre class="r"><code>p_high_prod &lt;- beer_states_total %&gt;%
+  ggplot(aes(year,barrels, group = state)) + 
+  geom_line(size = 1.5, colour = &quot;#d95f02&quot;) +
+  facet_wrap(~state, ncol =5) + theme_cowplot() +
+  gghighlight(state %in% high_prod_states,
+              #use_direct_label = FALSE,
+              #keep_scales = TRUE,
+              label_params = list(direction = &quot;x&quot;, xlim = c(2019,2919)),
+              unhighlighted_params = list(size = 0.5, alpha = 0.5)) +
+  theme_cowplot() +
+  scale_x_continuous(breaks = c(2008,2018), limits= c(2008,2025)) +
+  scale_y_log10(breaks = c(1e7, 1e5, 1e3), labels = c(&quot;10M&quot;, &quot;100k&quot;, &quot;1k&quot;)) +
+  theme(strip.text = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  labs(subtitle = &quot;States with the highest production in 2018&quot;)</code></pre>
+<pre><code>## Warning: Tried to calculate with group_by(), but the calculation failed.
+## Falling back to ungrouped filter operation...</code></pre>
+<pre><code>## label_key: state</code></pre>
+<pre class="r"><code>p_fast_growth &lt;- beer_states_total %&gt;%
+  ggplot(aes(year,barrels, group = state)) + 
+  geom_line(size = 1.5, colour = &quot;#1b9e77&quot;) +
+  facet_wrap(~state, ncol =5) + theme_cowplot() +
+  gghighlight(state %in% fast_growth_states,
+              #use_direct_label = FALSE,
+              #keep_scales = TRUE,
+              label_params = list(direction = &quot;x&quot;, xlim = c(2019,2919)),
+              unhighlighted_params = list(size = 0.5, alpha = 0.5)) +
+  theme_cowplot() +
+  scale_x_continuous(breaks = c(2008,2018), limits= c(2008,2025)) +
+  scale_y_log10(breaks = c(1e7, 1e5, 1e3), labels = c(&quot;10M&quot;, &quot;100k&quot;, &quot;1k&quot;)) +
+  theme(strip.text = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank()) +
+  labs(subtitle = &quot;States with the fastest growth&quot;) +
+   ylab(&quot;Total Production, Barrels&quot;)</code></pre>
+<pre><code>## Warning: Tried to calculate with group_by(), but the calculation failed.
+## Falling back to ungrouped filter operation...</code></pre>
+<pre><code>## label_key: state</code></pre>
+<pre class="r"><code>p_slow_growth &lt;- beer_states_total %&gt;%
+  ggplot(aes(year,barrels, group = state)) + 
+  geom_line(size = 1.5, colour = &quot;#7570b3&quot;) +
+  facet_wrap(~state, ncol =5) + theme_cowplot() +
+  gghighlight(state %in% slow_growth_states,
+              #use_direct_label = FALSE,
+              #keep_scales = TRUE,
+              label_params = list(direction = &quot;x&quot;, xlim = c(2019,2919)),
+              unhighlighted_params = list(size = 0.5, alpha = 0.5)) +
+  theme_cowplot() +
+  scale_x_continuous(breaks = c(2008,2018), limits= c(2008,2025)) +
+  scale_y_log10(breaks = c(1e7, 1e5, 1e3), labels = c(&quot;10M&quot;, &quot;100k&quot;, &quot;1k&quot;)) +
+  theme(strip.text = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank()) +
+  labs(subtitle = &quot;States with the slowest growth&quot;) +
+  xlab(&quot;Year&quot;)</code></pre>
+<pre><code>## Warning: Tried to calculate with group_by(), but the calculation failed.
+## Falling back to ungrouped filter operation...</code></pre>
+<pre><code>## label_key: state</code></pre>
+<pre class="r"><code>plot_total &lt;- p_high_prod / p_fast_growth / p_slow_growth</code></pre>
+</div>
+<div id="on-premises-production" class="section level1">
+<h1>On Premises production</h1>
+<p>Perform a linear regression on on premises production to find high and low growth rate states from the slope</p>
+<pre class="r"><code>beer_growth_op &lt;- beer_states %&gt;%
+  filter(type == &quot;On Premises&quot;) %&gt;%
+  filter(state != &quot;total&quot;) %&gt;%
+  filter(barrels &gt;= 500) %&gt;%
+  #mutate(barrels = replace_na(barrels, 0)) %&gt;%
+  group_by(state) %&gt;%
+  mutate(barrels_norm = barrels/max(barrels)) %&gt;%
+  group_nest(state) %&gt;%
+  mutate(model = map(data, ~lm(barrels_norm~year, data = .x)),
+         tidy = map(model, tidy)) %&gt;%
+  unnest(tidy) %&gt;%
+  filter(term == &quot;year&quot;) %&gt;%
+  select(state, estimate) %&gt;%
+  rename(slope = estimate)</code></pre>
+<pre><code>## Warning: ... is ignored in group_nest(&lt;grouped_df&gt;), please use group_by(...,
+## add = TRUE) %&gt;% group_nest()</code></pre>
+<pre class="r"><code>fast_op_growth_states &lt;- beer_growth_op %&gt;% top_n(5, slope) %&gt;% pull(state)
+
+slow_op_growth_states &lt;- beer_growth_op %&gt;% top_n(-5, slope) %&gt;% pull(state)
+
+high_op_prod_states &lt;- beer_states %&gt;%
+  filter(type == &quot;On Premises&quot;) %&gt;%
+  filter(year == 2018) %&gt;%
+  filter(state != &quot;total&quot;) %&gt;%
+  ungroup() %&gt;%
+  top_n(5, barrels) %&gt;% 
+  pull(state)
+
+slow_op_growth_states</code></pre>
+<pre><code>## [1] &quot;KS&quot; &quot;MO&quot; &quot;NM&quot; &quot;NV&quot; &quot;UT&quot;</code></pre>
+<pre class="r"><code>fast_op_growth_states</code></pre>
+<pre><code>## [1] &quot;GA&quot; &quot;MI&quot; &quot;MS&quot; &quot;MT&quot; &quot;TX&quot;</code></pre>
+<pre class="r"><code>high_op_prod_states</code></pre>
+<pre><code>## [1] &quot;CA&quot; &quot;CO&quot; &quot;FL&quot; &quot;NC&quot; &quot;TX&quot;</code></pre>
+<p>Plot the on premises production</p>
+<pre class="r"><code>p_high_prod_op &lt;- beer_states %&gt;%
+  filter(type == &quot;On Premises&quot;) %&gt;%
+  filter(state != &quot;total&quot;) %&gt;%
+    filter(barrels &gt;= 500) %&gt;%
+  ggplot(aes(year,barrels, group = state)) + 
+  geom_line(size = 1.5, colour = &quot;#d95f02&quot;) +
+  facet_wrap(~state, ncol =5) + theme_cowplot() +
+  gghighlight(state %in% high_op_prod_states,
+              #use_direct_label = FALSE,
+              #keep_scales = TRUE,
+              label_params = list(direction = &quot;x&quot;, xlim = c(2019,2919)),
+              unhighlighted_params = list(size = 0.5, alpha = 0.5)) +
+  theme_cowplot() +
+  scale_x_continuous(breaks = seq(2008,2018,10), limits= c(2007,2025)) +
+  scale_y_log10(labels = scales::unit_format(unit = &quot;k&quot;, scale = 1e-3, accuracy = 1, sep = &quot;&quot;)) +
+  theme(strip.text = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank()) +
+  labs(subtitle = &quot;States with the highest production in 2018&quot;)</code></pre>
+<pre><code>## Warning: Tried to calculate with group_by(), but the calculation failed.
+## Falling back to ungrouped filter operation...</code></pre>
+<pre><code>## label_key: state</code></pre>
+<pre class="r"><code>p_fast_growth_op &lt;- beer_states %&gt;%
+  filter(type == &quot;On Premises&quot;) %&gt;%
+  filter(state != &quot;total&quot;) %&gt;%
+    filter(barrels &gt;= 500) %&gt;%
+  ggplot(aes(year,barrels, group = state)) + 
+  geom_line(size = 1.5, colour = &quot;#1b9e77&quot;) +
+  facet_wrap(~state, ncol =5) + theme_cowplot() +
+  gghighlight(state %in% fast_op_growth_states,
+              #use_direct_label = FALSE,
+              #keep_scales = TRUE,
+              label_params = list(direction = &quot;x&quot;, xlim = c(2019,2919)),
+              unhighlighted_params = list(size = 0.5, alpha = 0.5)) +
+  theme_cowplot() +
+  scale_x_continuous(breaks = seq(2008,2018,10), limits= c(2007,2026)) +
+  scale_y_log10(labels = scales::unit_format(unit = &quot;k&quot;, scale = 1e-3, accuracy = 1, sep = &quot;&quot;)) +
+  theme(strip.text = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank()) +
+  labs(subtitle = &quot;States with the fastest growth&quot;) +
+   ylab(&quot;On Premises Consumption, Barrels&quot;)</code></pre>
+<pre><code>## Warning: Tried to calculate with group_by(), but the calculation failed.
+## Falling back to ungrouped filter operation...</code></pre>
+<pre><code>## label_key: state</code></pre>
+<pre class="r"><code>p_slow_growth_op &lt;- beer_states %&gt;%
+  filter(type == &quot;On Premises&quot;) %&gt;%
+  filter(state != &quot;total&quot;) %&gt;%
+    filter(barrels &gt;= 500) %&gt;%
+  ggplot(aes(year,barrels, group = state)) + 
+  geom_line(size = 1.5, colour = &quot;#7570b3&quot;) +
+  facet_wrap(~state, ncol =5) + theme_cowplot() +
+  gghighlight(state %in% slow_op_growth_states,
+              #use_direct_label = FALSE,
+              #keep_scales = TRUE,
+              label_params = list(direction = &quot;x&quot;, xlim = c(2019,2919)),
+              unhighlighted_params = list(size = 0.5, alpha = 0.5)) +
+  theme_cowplot() +
+  scale_x_continuous(breaks = seq(2008,2018,10), limits= c(2007,2026)) +
+  scale_y_log10(labels = scales::unit_format(unit = &quot;k&quot;, scale = 1e-3, accuracy = 1, sep = &quot;&quot;)) +
+  theme(strip.text = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank()) +
+  labs(subtitle = &quot;States with the slowest growth&quot;) +
+  xlab(&quot;Year&quot;)</code></pre>
+<pre><code>## Warning: Tried to calculate with group_by(), but the calculation failed.
+## Falling back to ungrouped filter operation...</code></pre>
+<pre><code>## label_key: state</code></pre>
+<pre class="r"><code>plot_op &lt;- p_high_prod_op / p_fast_growth_op / p_slow_growth_op</code></pre>
+<div id="combine-the-plots" class="section level2">
+<h2>Combine the plots</h2>
+<pre class="r"><code>(plot_total | plot_op) + 
+  plot_annotation(title = &quot;Total beer production has slowed, while production for consumption on the premises has soared, particuarly since 2013&quot;, caption = &quot;Data source: Alcohol and Tobacco Tax and Trade Bureau (TTB) via @brewersstats\n\n@adamjtaylor #tidytuesday 2020-03-31&quot;)</code></pre>
+<p><img src="/post/2020-04-22-tidytuesday-beer-production_files/figure-html/unnamed-chunk-6-1.png" width="1344" /></p>
+</div>
+</div>

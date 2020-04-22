@@ -1,0 +1,17 @@
+"0","library(tidyverse)"
+"0","library(cowplot)"
+"0","library(ggrepel)"
+"0","#install.packages(""gghighlight"")"
+"0","library(gghighlight)"
+"0","library(patchwork)"
+"0","library(broom)"
+"0",""
+"0","beer_states <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-03-31/beer_states.csv')"
+"2","Parsed with column specification:
+cols(
+  state = [31mcol_character()[39m,
+  year = [32mcol_double()[39m,
+  barrels = [32mcol_double()[39m,
+  type = [31mcol_character()[39m
+)
+"

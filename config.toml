@@ -1,6 +1,6 @@
 baseurl = "/"
 languageCode = "en-us"
-title = "A Hugo website"
+title = "Adam J Taylor's personal website"
 theme = "hugo-lithium"
 googleAnalytics = ""
 disqusShortname = ""
@@ -9,15 +9,19 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 [permalinks]
     post = "/:year/:month/:day/:slug/"
 
+
+[[menu.main]]
+    name = " Adam J Taylor, PhD"
+    url = "/"
 [[menu.main]]
     name = "About"
     url = "/about/"
 [[menu.main]]
     name = "GitHub"
-    url = "https://github.com/rstudio/blogdown"
+    url = "https://github.com/adamjtaylor"
 [[menu.main]]
     name = "Twitter"
-    url = "https://twitter.com/rstudio"
+    url = "https://twitter.com/adamjtaylor"
 
 [params]
     description = "A website built through Hugo and blogdown."
@@ -35,7 +39,7 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
     favicon = "favicon.ico"
 
     [params.logo]
-    url = "logo.png"
+    url = "headshot.jpg"
     width = 50
     height = 50
     alt = "Logo"
